@@ -32,12 +32,36 @@ public class LargeInteger {
     /////////   БЛОК СЛОЖЕНИЕ\ВЫЧИТАНИЕ\УМНОЖЕНИЕ   /////////////////
     public String addition(String otherNum){
         int[] otherTrans = New.transform(otherNum);
-        int[] result = new int[Math.max(numbTrans.length, otherTrans.length)];
-        for (int i = 0; i < Math.min(numbTrans.length, otherTrans.length); i++){
+        int min = Math.min(numbTrans.length, otherTrans.length);
+        int max = Math.max(numbTrans.length, otherTrans.length);
+        int last = (numbTrans[min - 1] + otherTrans[min - 1])/10;
+        int prev = (numbTrans[min - 1] + otherTrans[min - 1])%10;
+        int[] result = new int[max];
+
+        for (int i = 0; i < min - 1; i++){
             result[i] += (numbTrans[i] + otherTrans[i])%10;
             result[i+1] = (numbTrans[i] + otherTrans[i])/10;
         }
-        // доделать случай, когда остались символы в наибольшем числе
+        if (max == min && last > 0) result = addSize(result, prev, last);
+        else result[min - 1] = prev;
+        if (max == min + 1 && last > 0){
+            result[min - 1] = prev;
+            result[min] = last;
+            if (numbTrans.length > otherTrans.length) {
+                int nextPrew = (last + numbTrans[max - 1])%10;
+                int nextLast = (last + numbTrans[max - 1])/10;
+                if (last + numbTrans[max - 1] > 10)  result = addSize(result, nextPrew, nextLast);
+            }
+            else {
+                int nextPrew = (last + otherTrans[max - 1])%10;
+                int nextLast = (last + otherTrans[max - 1])/10;
+                if (last + otherTrans[max - 1] > 10)  result = addSize(result, nextPrew, nextLast);
+            }
+
+        }
+        if (numbTrans.length > otherTrans.length && max > min + 1) end(min, max, numbTrans, result);
+        if (numbTrans.length < otherTrans.length && max > min + 1) end(min, max, otherTrans, result);
+
         return new StringBuffer(Arrays.toString(result)).reverse().toString();
     }
 //    public String subtraction(String otherNum){   //вычитание
@@ -58,6 +82,22 @@ public class LargeInteger {
 //        String newNum = " dsfdsf";                //какой-то алгоритм
 //        return newNum;
 //    }
+    private void end(int min, int max, int[] arr, int[] res){   // добавление оставшихся элементов
+        //if (min == max && res[min] + arr[min] )
+        for (int i = min+1; i < max; i++){
+            res[i] += arr[i];
+
+        }
+    }
+    private int[] addSize(int[] old, int prev, int last){      // случаи, когда Превышается размер результирующего массива
+        int[] newRes = new int[old.length + 1];
+        for (int i = 0; i < old.length - 1; i++){
+            newRes[i] = old[i];
+        }
+        newRes[old.length - 1] = prev;
+        newRes[old.length] = last;
+        return newRes;
+    }
 }
 
 class New{ //просто попробовал добыить вспомогательный класс
