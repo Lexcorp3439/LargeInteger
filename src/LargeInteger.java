@@ -1,69 +1,59 @@
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class LargeInteger {
     private String number;
-    private int[] numbTrans = New.transform(number);
+    private ArrayList<Integer> numbTrans = new ArrayList<>();
+    private int numSize = numbTrans.size();
+
+    public LargeInteger(String num){
+        this.number = num;
+    }
 
     public String gerNumber(){
         return number;
     }
-    public void setNumber(String number) {
-        this.number = number;
-    }
 
     /////////   БЛОК СРАВНЕНИЕ   ///////////////////////////
     public boolean equals(String otherNum){
-        int[] otherTrans = New.transform(otherNum);
-        if (numbTrans.length != otherTrans.length) return false;
-        else for (int i = 0; i < numbTrans.length; i++)
-            if (numbTrans[i] != otherTrans[i]) return false;
+        ArrayList<Integer> otherTrans = New.transform(otherNum);
+        int othSize = otherTrans.size();
+
+        if (numSize != othSize) return false;
+        else for (int i = 0; i < numSize; i++)
+            if (!Objects.equals(numbTrans.get(i), otherTrans.get(i))) return false;
         return true;
     }
     public boolean bigger(String otherNum){
-        int[] otherTrans = New.transform(otherNum);
-        if (numbTrans.length == otherTrans.length)
-            for (int i = numbTrans.length; i > 0; i--) {
-                if (numbTrans[i] > otherTrans[i]) return true;
-                if (numbTrans[i] < otherTrans[i]) return false;
+        ArrayList<Integer> otherTrans = New.transform(otherNum);
+        int othSize = otherTrans.size();
+
+        if (numSize == othSize)
+            for (int i = numSize; i > 0; i--) {
+                if (numbTrans.get(i) > otherTrans.get(i)) return true;
+                if (numbTrans.get(i) < otherTrans.get(i)) return false;
             }
-        return numbTrans.length > otherTrans.length;
+        return numSize > othSize;
     }
 
     /////////   БЛОК СЛОЖЕНИЕ\ВЫЧИТАНИЕ\УМНОЖЕНИЕ   /////////////////
-    public String addition(String otherNum){
-        int[] otherTrans = New.transform(otherNum);
-        int min = Math.min(numbTrans.length, otherTrans.length);
-        int max = Math.max(numbTrans.length, otherTrans.length);
-        int last = (numbTrans[min - 1] + otherTrans[min - 1])/10;
-        int prev = (numbTrans[min - 1] + otherTrans[min - 1])%10;
-        int[] result = new int[max];
+    public LargeInteger addition(String otherNum){
+        ArrayList<Integer> otherTrans = New.transform(otherNum);
+        int othSize = otherTrans.size();
+        int min = Math.min(numSize, othSize);
+        int max = Math.max(numSize, othSize);
+        ArrayList<Integer> result = new ArrayList<>(max + 1);
 
-        for (int i = 0; i < min - 1; i++){
-            result[i] += (numbTrans[i] + otherTrans[i])%10;
-            result[i+1] = (numbTrans[i] + otherTrans[i])/10;
+        for (int i = 0; i < min; i++){
+            result.set(i, (numbTrans.get(i) + otherTrans.get(i)) % 10);
+            result.set(i + 1, (numbTrans.get(i) + otherTrans.get(i)) / 10);
         }
-        if (max == min && last > 0) result = addSize(result, prev, last);
-        else result[min - 1] = prev;
-        if (max == min + 1 && last > 0){
-            result[min - 1] = prev;
-            result[min] = last;
-            if (numbTrans.length > otherTrans.length) {
-                int nextPrew = (last + numbTrans[max - 1])%10;
-                int nextLast = (last + numbTrans[max - 1])/10;
-                if (last + numbTrans[max - 1] > 10)  result = addSize(result, nextPrew, nextLast);
-            }
-            else {
-                int nextPrew = (last + otherTrans[max - 1])%10;
-                int nextLast = (last + otherTrans[max - 1])/10;
-                if (last + otherTrans[max - 1] > 10)  result = addSize(result, nextPrew, nextLast);
-            }
+        if (numSize > othSize) result = New.end(min, max, numbTrans, result);
+        if (numSize < othSize) result = New.end(min, max, otherTrans, result);
 
-        }
-        if (numbTrans.length > otherTrans.length && max > min + 1) end(min, max, numbTrans, result);
-        if (numbTrans.length < otherTrans.length && max > min + 1) end(min, max, otherTrans, result);
-
-        return new StringBuffer(Arrays.toString(result)).reverse().toString();
+        return new LargeInteger(New.retResult(result, max));
     }
+
 //    public String subtraction(String otherNum){   //вычитание
 //        int[] otherTrans = New.transform(otherNum);               //какой-то алгоритм
 //
@@ -82,31 +72,66 @@ public class LargeInteger {
 //        String newNum = " dsfdsf";                //какой-то алгоритм
 //        return newNum;
 //    }
-    private void end(int min, int max, int[] arr, int[] res){   // добавление оставшихся элементов
-        //if (min == max && res[min] + arr[min] )
-        for (int i = min+1; i < max; i++){
-            res[i] += arr[i];
 
-        }
-    }
-    private int[] addSize(int[] old, int prev, int last){      // случаи, когда Превышается размер результирующего массива
-        int[] newRes = new int[old.length + 1];
-        for (int i = 0; i < old.length - 1; i++){
-            newRes[i] = old[i];
-        }
-        newRes[old.length - 1] = prev;
-        newRes[old.length] = last;
-        return newRes;
-    }
+
 }
 
-class New{ //просто попробовал добыить вспомогательный класс
-    static int[] transform(String number){
+class New{
+    static ArrayList<Integer> transform(String number){
         char[] str = new StringBuffer(number).reverse().toString().toCharArray();
-        int[] trans = new int[str.length];
+        ArrayList<Integer> trans = new ArrayList<>();
         for (int i = 0; i < str.length; i++){
-            trans[i] = str[i] - '0';
+            trans.set(i, str[i] - '0');
         }
         return trans;
     }
+
+    static ArrayList<Integer> end(int min, int max, ArrayList<Integer> list, ArrayList<Integer> res){   // добавление оставшихся элементов
+        int div;
+        int mod;
+        for (int i = min + 1; i < max; i++){
+            div = (list.get(min) + res.get(min))/10;
+            mod = (list.get(min) + res.get(min))%10;
+            res.set(i, mod);
+            res.set(i + 1, div);
+        }
+        return res;
+    }
+
+    static String retResult(ArrayList<Integer> res, int max){
+        String str;
+        if (res.get(max - 1) == 0) str = new StringBuffer(res.subList(0, max - 2).toString()).reverse().toString();
+        else str = new StringBuffer(res.toString()).reverse().toString();
+        return str;
+    }
 }
+
+
+/////////// на случай неожиданной надобности ///////////////
+//    private ArrayList addSize(int[] old, int prev, int last){      // случаи, когда Превышается размер результирующего массива
+//        int[] newRes = new int[old.length + 1];
+//        for (int i = 0; i < old.length - 1; i++){
+//            newRes[i] = old[i];
+//        }
+//        newRes[old.length - 1] = prev;
+//        newRes[old.length] = last;
+//        return newRes;
+//    }
+//
+//        if (max == min && last > 0) result = addSize(result, prev, last);
+//        else result[min - 1] = prev;
+//        if (max == min + 1 && last > 0){
+//            result[min - 1] = prev;
+//            result[min] = last;
+//            if (numSize > othSize) {
+//                int nextPrew = (last + numbTrans.get(max - 1))%10;
+//                int nextLast = (last + numbTrans.get(max - 1))/10;
+//                if (last + numbTrans.get(max - 1) > 10)  result = addSize(result, nextPrew, nextLast);
+//            }
+//            else {
+//                int nextPrew = (last + otherTrans.get(max - 1))%10;
+//                int nextLast = (last + otherTrans.get(max - 1))/10;
+//                if (last + otherTrans.get(max - 1) > 10)  result = addSize(result, nextPrew, nextLast);
+//            }
+//
+//        }
