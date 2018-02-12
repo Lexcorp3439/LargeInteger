@@ -48,18 +48,44 @@ public class LargeInteger {
             result.set(i, (numbTrans.get(i) + otherTrans.get(i)) % 10);
             result.set(i + 1, (numbTrans.get(i) + otherTrans.get(i)) / 10);
         }
-        if (numSize > othSize) result = New.end(min, max, numbTrans, result);
-        if (numSize < othSize) result = New.end(min, max, otherTrans, result);
-
+        if (numSize > othSize) result = New.complete(min, max, numbTrans, result, '+');
+        if (numSize < othSize) result = New.complete(min, max, otherTrans, result, '+');
         return new LargeInteger(New.retResult(result, max));
     }
 
-//    public String subtraction(String otherNum){   //вычитание
-//        int[] otherTrans = New.transform(otherNum);               //какой-то алгоритм
-//
-//    }
+    public LargeInteger subtraction(String otherNum){       //определить наибольшое число и вычитать из него
+        ArrayList<Integer> otherTrans = New.transform(otherNum);
+        int othSize = otherTrans.size();
+        int min = Math.min(numSize, othSize);
+        int max = Math.max(numSize, othSize);
+        ArrayList<Integer> result = new ArrayList<>(max);
+        ArrayList<Integer> minList;
+        ArrayList<Integer> maxList;
+
+        if (bigger(otherNum)) {
+            maxList = numbTrans;
+            minList = otherTrans;
+        }
+        else {
+            minList = numbTrans;
+            maxList = otherTrans;
+            char sign = '-';
+        }
+        for (int i = 0; i < min; i++){
+            int difference = maxList.get(i) - minList.get(i);
+            if (difference < 0) {
+                result.set(i, (maxList.get(i) - minList.get(i) + 10));
+                maxList.set(i + 1, minList.get(i + 1) - 1);
+            }
+            else result.set(i, numbTrans.get(i) - otherTrans.get(i));
+        }
+        if (max > min) result = New.complete(min, max, maxList, result, '-');
+        return new LargeInteger(New.retResult(result, max));
+
+    }
 //    public String multiplier(String otherNum){    //умножение
-//        int[] otherTrans = New.transform(otherNum);                //какой-то алгоритм
+//        ArrayList<Integer> otherTrans = New.transform(otherNum);
+//        int othSize = otherTrans.size();
 //
 //    }
 
@@ -80,20 +106,31 @@ class New{
     static ArrayList<Integer> transform(String number){
         char[] str = new StringBuffer(number).reverse().toString().toCharArray();
         ArrayList<Integer> trans = new ArrayList<>();
+
         for (int i = 0; i < str.length; i++){
             trans.set(i, str[i] - '0');
         }
         return trans;
     }
 
-    static ArrayList<Integer> end(int min, int max, ArrayList<Integer> list, ArrayList<Integer> res){   // добавление оставшихся элементов
-        int div;
-        int mod;
-        for (int i = min + 1; i < max; i++){
-            div = (list.get(min) + res.get(min))/10;
-            mod = (list.get(min) + res.get(min))%10;
-            res.set(i, mod);
-            res.set(i + 1, div);
+    static ArrayList<Integer> complete(int min, int max, ArrayList<Integer> list, ArrayList<Integer> res, char oper){   // добавление оставшихся элементов
+        switch (oper){
+            case '+':{
+                int div;
+                int mod;
+
+                for (int i = min; i < max; i++){
+                    div = (list.get(min) + res.get(min))/10;
+                    mod = (list.get(min) + res.get(min))%10;
+                    res.set(i, mod);
+                    res.set(i + 1, div);
+                }
+            }
+            case '-':{
+                for (int i = min; i < max; i++){
+                    res.set(i, list.get(i));
+                }
+            }
         }
         return res;
     }
@@ -105,33 +142,3 @@ class New{
         return str;
     }
 }
-
-
-/////////// на случай неожиданной надобности ///////////////
-//    private ArrayList addSize(int[] old, int prev, int last){      // случаи, когда Превышается размер результирующего массива
-//        int[] newRes = new int[old.length + 1];
-//        for (int i = 0; i < old.length - 1; i++){
-//            newRes[i] = old[i];
-//        }
-//        newRes[old.length - 1] = prev;
-//        newRes[old.length] = last;
-//        return newRes;
-//    }
-//
-//        if (max == min && last > 0) result = addSize(result, prev, last);
-//        else result[min - 1] = prev;
-//        if (max == min + 1 && last > 0){
-//            result[min - 1] = prev;
-//            result[min] = last;
-//            if (numSize > othSize) {
-//                int nextPrew = (last + numbTrans.get(max - 1))%10;
-//                int nextLast = (last + numbTrans.get(max - 1))/10;
-//                if (last + numbTrans.get(max - 1) > 10)  result = addSize(result, nextPrew, nextLast);
-//            }
-//            else {
-//                int nextPrew = (last + otherTrans.get(max - 1))%10;
-//                int nextLast = (last + otherTrans.get(max - 1))/10;
-//                if (last + otherTrans.get(max - 1) > 10)  result = addSize(result, nextPrew, nextLast);
-//            }
-//
-//        }
