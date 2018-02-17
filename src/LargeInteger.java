@@ -1,3 +1,4 @@
+import java.net.SocketPermission;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -83,30 +84,28 @@ public class LargeInteger  {
         if (max > min)
             for (int i = min; i < max; i++ )
                 result.add(i, maxList.get(i));
-        System.out.println(sign + Helper.retResult(result));
         return new LargeInteger(sign + Helper.retResult(result));
     }
 
     public LargeInteger multiplier(LargeInteger otherNum){
         ArrayList<Integer> minList = bigger(otherNum)? list(otherNum.getNumber()) : list(getNumber());
         ArrayList<Integer> maxList = bigger(otherNum)? list(getNumber()) : list(otherNum.getNumber());
-        int min = minList.size();
-        int max = maxList.size();
-        LargeInteger result = new LargeInteger("5657");
+        LargeInteger result = new LargeInteger("0");
         ArrayList<Integer> res;
+        int min = minList.size();
         int tens = 0;
 
         for (int elem: maxList){
-            res = Helper.zeroAdd(0, max + 1, new ArrayList<>(max + 1));
-            for (int i = 0; i < min; i++){
-                int sum = elem * minList.get(i)+ res.get(i);
-                res.set(i, sum % 10 );
-                res.set(i + 1, sum / 10 );
+            res = Helper.zeroAdd(0, min + tens + 1 , new ArrayList<>(min + tens + 1));
+            for (int i = 0; i < min + tens; i++){
+                if (i >= tens){
+                    int sum = elem * minList.get(i - tens) + res.get(i);
+                    res.set(i, sum % 10);
+                    res.set(i + 1, sum / 10);
+                }
             }
-            for (int j = min; j < min + tens; j++){
-                //res.add(j,)
-            }
-            //result = result.addition(new LargeInteger(Helper.retResult(res)));
+            result = result.addition(new LargeInteger(Helper.retResult(res)));
+            tens++;
         }
         return result;
     }
