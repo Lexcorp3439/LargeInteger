@@ -1,4 +1,3 @@
-import java.net.SocketPermission;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -14,7 +13,7 @@ public class LargeInteger  {
         return number;
     }
 
-    static ArrayList<Integer> list (String number){
+    private static ArrayList<Integer> list(String number){
         ArrayList<Integer> result = new ArrayList<>();
 
         for (int i = 0; i < number.length(); i++){
@@ -22,6 +21,7 @@ public class LargeInteger  {
         }
         return result;
     }
+
     /////////   БЛОК СРАВНЕНИЕ   ///////////////////////////
     @Override
     public boolean equals(Object otherNum){  //исрпавить !!!!
@@ -32,46 +32,48 @@ public class LargeInteger  {
         return false;
     }
 
-    public boolean bigger(LargeInteger otherNum){
-        ArrayList<Integer> otherTrans = list(otherNum.getNumber());
-        ArrayList<Integer> numbTrans = list(getNumber());
-        int othSize = otherTrans.size();
-        int numSize = numbTrans.size();
+    public boolean more(LargeInteger otherNum){
+        ArrayList<Integer> othList = list(otherNum.getNumber());
+        ArrayList<Integer> numbList = list(getNumber());
+        int othSize = othList.size();
+        int numSize = numbList.size();
 
         if (numSize == othSize)
             for (int i = numSize - 1; i >= 0; i--) {
-                if (numbTrans.get(i) > otherTrans.get(i)) return true;
-                if (numbTrans.get(i) < otherTrans.get(i)) return false;
+                if (numbList.get(i) > othList.get(i)) return true;
+                if (numbList.get(i) < othList.get(i)) return false;
             }
         return numSize > othSize;
     }
 
-    /////////   БЛОК СЛОЖЕНИЕ\ВЫЧИТАНИЕ\УМНОЖЕНИЕ   /////////////////
-    public LargeInteger addition(LargeInteger otherNum){
-        ArrayList<Integer> otherTrans = list(otherNum.getNumber());
-        ArrayList<Integer> numbTrans = list(getNumber());
-        int min = Math.min(numbTrans.size(), otherTrans.size());
-        int max = Math.max(numbTrans.size(), otherTrans.size());
+    public boolean moreOrEqual(LargeInteger otherNum){
+        return equals(otherNum) || more(otherNum);
+    }
+
+    public LargeInteger add(LargeInteger otherNum){  //addition
+        ArrayList<Integer> othList = list(otherNum.getNumber());
+        ArrayList<Integer> numbList = list(getNumber());
+        int min = Math.min(numbList.size(), othList.size());
+        int max = Math.max(numbList.size(), othList.size());
         ArrayList<Integer> result = Helper.zeroAdd(0, max + 1, new ArrayList<>());   //нужно заранее заполнить все нулями!!!!!!!!!
-        if (otherTrans.size() < numbTrans.size()) otherTrans = Helper.zeroAdd(min, max, otherTrans);
-        else numbTrans = Helper.zeroAdd(min, max, numbTrans);
+        if (othList.size() < numbList.size()) othList = Helper.zeroAdd(min, max, othList);
+        else numbList = Helper.zeroAdd(min, max, numbList);
 
         for (int i = 0; i < max; i++){
-            int sum = numbTrans.get(i) + otherTrans.get(i) + result.get(i);
+            int sum = numbList.get(i) + othList.get(i) + result.get(i);
             result.set(i, sum % 10);
             result.set(i + 1, sum / 10);
         }
-        System.out.println(Helper.retResult(result));
         return new LargeInteger(Helper.retResult(result));
     }
 
-    public LargeInteger subtraction(LargeInteger otherNum){
-        ArrayList<Integer> minList = bigger(otherNum)? list(otherNum.getNumber()) : list(getNumber());
-        ArrayList<Integer> maxList = bigger(otherNum)? list(getNumber()) : list(otherNum.getNumber());
+    public LargeInteger sub(LargeInteger otherNum){ //subtraction
+        ArrayList<Integer> minList = more(otherNum)? list(otherNum.getNumber()) : list(getNumber());
+        ArrayList<Integer> maxList = more(otherNum)? list(getNumber()) : list(otherNum.getNumber());
         int min = minList.size();
         int max = maxList.size();
         ArrayList<Integer> result = new ArrayList<>(max + 1);
-        String sign = !bigger(otherNum)? "-" : "";
+        String sign = more(otherNum) || equals(otherNum)? "" : "-";
 
         for (int i = 0; i < min; i++){
             int difference = maxList.get(i) - minList.get(i);
@@ -87,38 +89,58 @@ public class LargeInteger  {
         return new LargeInteger(sign + Helper.retResult(result));
     }
 
-    public LargeInteger multiplier(LargeInteger otherNum){
-        ArrayList<Integer> minList = bigger(otherNum)? list(otherNum.getNumber()) : list(getNumber());
-        ArrayList<Integer> maxList = bigger(otherNum)? list(getNumber()) : list(otherNum.getNumber());
+    public LargeInteger multi(LargeInteger otherNum){  //multiplier
+        ArrayList<Integer> minList = more(otherNum)? list(otherNum.getNumber()) : list(getNumber());
+        ArrayList<Integer> maxList = more(otherNum)? list(getNumber()) : list(otherNum.getNumber());
         LargeInteger result = new LargeInteger("0");
-        ArrayList<Integer> res;
+        ArrayList<Integer> resList;
         int min = minList.size();
         int tens = 0;
 
         for (int elem: maxList){
-            res = Helper.zeroAdd(0, min + tens + 1 , new ArrayList<>(min + tens + 1));
+            resList = Helper.zeroAdd(0, min + tens + 1 , new ArrayList<>(min + tens + 1));
             for (int i = 0; i < min + tens; i++){
                 if (i >= tens){
-                    int sum = elem * minList.get(i - tens) + res.get(i);
-                    res.set(i, sum % 10);
-                    res.set(i + 1, sum / 10);
+                    int sum = elem * minList.get(i - tens) + resList.get(i);
+                    resList.set(i, sum % 10);
+                    resList.set(i + 1, sum / 10);
                 }
             }
-            result = result.addition(new LargeInteger(Helper.retResult(res)));
+            result = result.add(new LargeInteger(Helper.retResult(resList)));
             tens++;
         }
         return result;
     }
 
-    ////////   БЛОК ДЕЛЕНИЕ\ОСТАТОК   ////////////////////////////
-//    public LargeInteger division(LargeInteger otherNum){      //деление
-//        String newNum = " dsfdsf";                //какой-то алгоритм
-//        return newNum;
-//    }
-//    public LargeInteger residue(LargeInteger otherNum){       //остаток
-//        String newNum = " dsfdsf";                //какой-то алгоритм
-//        return newNum;
-//    }
+    public LargeInteger div(LargeInteger otherNum){  //division
+        ArrayList<Integer> dividend = list(getNumber());
+        StringBuilder result = new StringBuilder();
+        LargeInteger mediate ;
+        int numSize = getNumber().length();
+        int key = 0;
+
+        if (!more(otherNum)) return new LargeInteger("0");
+        for (int i = numSize - 1; i >= 0; i--){
+            mediate = new LargeInteger(Helper.retResult(Helper.subList(dividend, i,numSize - 1)));
+            while (mediate.moreOrEqual(otherNum)){
+                mediate = mediate.sub(otherNum);
+                key++;
+            }
+            if (key != 0) result.append(key);
+            key = 0;
+            if (i != 0)
+                if (!Objects.equals(mediate.getNumber(), "0"))
+                    dividend = Helper.union(Helper.subList(dividend, 0, i - 1), list(mediate.getNumber()));
+                else dividend = Helper.subList(dividend, 0, i - 1);
+            numSize = dividend.size();
+        }
+        return new LargeInteger(result.toString());
+    }
+
+    public LargeInteger mod(LargeInteger otherNum){  //modulo
+        if (!more(otherNum)) return new LargeInteger(getNumber());
+        return sub(otherNum.multi(div(otherNum)));
+    }
 
 
 }
@@ -133,8 +155,24 @@ class Helper {
     static String retResult(ArrayList<Integer> res){
         String str;
         int maximum = res.size();
-        if (res.get(maximum - 1) == 0) res.remove(maximum - 1);  //
+        if (res.get(maximum - 1) == 0 && maximum - 1 != 0) res.remove(maximum - 1);  //
         str = new StringBuffer(res.toString().replaceAll("[,\\[\\] ]", "")).reverse().toString();
         return str;
     }
+
+    static ArrayList<Integer> union(ArrayList<Integer> a, ArrayList<Integer> b){
+        for (int i = 0; i < b.size(); i++){
+            a.add(a.size() + i,b.get(i));
+        }
+        return a;
+    }
+
+    static ArrayList<Integer> subList(ArrayList<Integer> arr, int low, int up){
+       ArrayList<Integer> newArr = new ArrayList<>();
+       for (int i = low; i <= up; i++)
+           newArr.add(i - low, arr.get(i));
+       return newArr;
+    }
 }
+
+//for (LargeInteger dek = new LargeInteger("0"); dek.more(new LargeInteger(getNumber())); dek.add(new LargeInteger("1")))  подумать над использованием этой прекрасной штуки...
