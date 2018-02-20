@@ -1,8 +1,8 @@
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-
-public class LargeInteger  {
+public class LargeInteger implements Comparable<LargeInteger> {
 
     private String number;
 
@@ -10,71 +10,46 @@ public class LargeInteger  {
         this.number = num;
     }
 
+    public LargeInteger(int num){
+        this.number = Integer.toString(num);
+    }
+
     public String getNumber(){
         return number;
     }
 
-
-
-    @Override
-    public boolean equals(Object otherNum){  //исрпавить !!!!
-        if (otherNum instanceof LargeInteger){
-            LargeInteger other = (LargeInteger) otherNum;
-            return Objects.equals(number, other.number);
-        }
-        return false;
-    }
-
-    public boolean more(LargeInteger otherNum){
-        ArrayList<Integer> othList = Help.list(otherNum.getNumber());
-        ArrayList<Integer> numbList = Help.list(getNumber());
-        int othSize = othList.size();
-        int numSize = numbList.size();
-
-        if (numSize == othSize)
-            for (int i = numSize - 1; i >= 0; i--) {
-                if (numbList.get(i) > othList.get(i)) return true;
-                if (numbList.get(i) < othList.get(i)) return false;
-            }
-        return numSize > othSize;
-    }
-
-    public boolean moreOrEqual(LargeInteger otherNum){
-        return equals(otherNum) || more(otherNum);
-    }
-
     public LargeInteger add(LargeInteger otherNum){  //addition
-        ArrayList<Integer> othList = Help.list(otherNum.getNumber());
-        ArrayList<Integer> numbList = Help.list(getNumber());
+        ArrayList<Byte> othList = Help.list(otherNum.getNumber());
+        ArrayList<Byte> numbList = Help.list(getNumber());
         int min = Math.min(numbList.size(), othList.size());
         int max = Math.max(numbList.size(), othList.size());
-        ArrayList<Integer> result = Help.addZero(0, max + 1, new ArrayList<>());   //нужно заранее заполнить все нулями!!!!!!!!!
+        ArrayList<Byte> result = Help.addZero(0, max + 1, new ArrayList<>());   //нужно заранее заполнить все нулями!!!!!!!!!
         if (othList.size() < numbList.size()) othList = Help.addZero(min, max, othList);
         else numbList = Help.addZero(min, max, numbList);
 
         for (int i = 0; i < max; i++){
             int sum = numbList.get(i) + othList.get(i) + result.get(i);
-            result.set(i, sum % 10);
-            result.set(i + 1, sum / 10);
+            result.set(i, (byte)(sum % 10));
+            result.set(i + 1, (byte)(sum / 10));
         }
         return new LargeInteger(Help.toString(result));
     }
 
     public LargeInteger sub(LargeInteger otherNum){ //subtraction
-        ArrayList<Integer> minList = more(otherNum)? Help.list(otherNum.getNumber()) : Help.list(getNumber());
-        ArrayList<Integer> maxList = more(otherNum)? Help.list(getNumber()) : Help.list(otherNum.getNumber());
+        ArrayList<Byte> minList = compareTo(otherNum) <= 0 ? Help.list(getNumber()) : Help.list(otherNum.getNumber());
+        ArrayList<Byte> maxList = compareTo(otherNum) <= 0 ? Help.list(otherNum.getNumber()) : Help.list(getNumber());
         int min = minList.size();
         int max = maxList.size();
-        ArrayList<Integer> result = new ArrayList<>(max + 1);
-        String sign = more(otherNum) || equals(otherNum)? "" : "-";
+        ArrayList<Byte> result = new ArrayList<>(max + 1);
+        String sign = compareTo(otherNum) >= 0? "" : "-";  //убрать вычитание
 
         for (int i = 0; i < min; i++){
             int difference = maxList.get(i) - minList.get(i);
             if (difference < 0) {
-                result.add(i, (maxList.get(i) - minList.get(i) + 10));
-                maxList.set(i + 1, maxList.get(i + 1) - 1);
+                result.add(i, (byte)(maxList.get(i) - minList.get(i) + 10));
+                maxList.set(i + 1, (byte)(maxList.get(i + 1) - 1));
             }
-            else result.add(i, maxList.get(i) - minList.get(i));
+            else result.add(i, (byte)(maxList.get(i) - minList.get(i)));
         }
         if (max > min)
             for (int i = min; i < max; i++ )
@@ -83,10 +58,10 @@ public class LargeInteger  {
     }
 
     public LargeInteger multi(LargeInteger otherNum){  //multiplier
-        ArrayList<Integer> minList = more(otherNum)? Help.list(otherNum.getNumber()) : Help.list(getNumber());
-        ArrayList<Integer> maxList = more(otherNum)? Help.list(getNumber()) : Help.list(otherNum.getNumber());
+        ArrayList<Byte> minList = compareTo(otherNum) <= 0 ? Help.list(getNumber()) : Help.list(otherNum.getNumber());
+        ArrayList<Byte> maxList = compareTo(otherNum) <= 0 ? Help.list(otherNum.getNumber()) : Help.list(getNumber());
         LargeInteger result = new LargeInteger("0");
-        ArrayList<Integer> resList;
+        ArrayList<Byte> resList;
         int min = minList.size();
         int tens = 0;
 
@@ -95,8 +70,8 @@ public class LargeInteger  {
             for (int i = 0; i < min + tens; i++){
                 if (i >= tens){
                     int sum = elem * minList.get(i - tens) + resList.get(i);
-                    resList.set(i, sum % 10);
-                    resList.set(i + 1, sum / 10);
+                    resList.set(i, (byte)(sum % 10));
+                    resList.set(i + 1, (byte)(sum / 10));
                 }
             }
             result = result.add(new LargeInteger(Help.toString(resList)));
@@ -106,16 +81,16 @@ public class LargeInteger  {
     }
 
     public LargeInteger div(LargeInteger otherNum){  //division
-        ArrayList<Integer> dividend = Help.list(getNumber());
+        ArrayList<Byte> dividend = Help.list(getNumber());
         StringBuilder result = new StringBuilder();
         LargeInteger mediate ;
         int numSize = getNumber().length();
         int key = 0;
 
-        if (!more(otherNum)) return new LargeInteger("0");
+        if (compareTo(otherNum) < 0) return new LargeInteger("0");
         for (int i = numSize - 1; i >= 0; i--){
             mediate = new LargeInteger(Help.toString(Help.subList(dividend, i,numSize - 1)));
-            while (mediate.moreOrEqual(otherNum)){
+            while (mediate.compareTo(otherNum) >= 0){
                 mediate = mediate.sub(otherNum);
                 key++;
             }
@@ -131,43 +106,75 @@ public class LargeInteger  {
     }
 
     public LargeInteger mod(LargeInteger otherNum){  //modulo
-        if (!more(otherNum)) return new LargeInteger(getNumber());
+        if (compareTo(otherNum) < 0) return new LargeInteger(getNumber());
         return sub(otherNum.multi(div(otherNum)));
     }
 
+    @Override
+    public String toString() {
+        return "LargeInteger{" +
+                "number = '" + number + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object otherNum){
+        if (otherNum instanceof LargeInteger){
+            LargeInteger other = (LargeInteger) otherNum;
+            return Objects.equals(number, other.number);
+        }
+        return false;
+    }
+
+    @Override
+    public int compareTo(LargeInteger otherNum) {
+        ArrayList<Byte> othList = Help.list(otherNum.getNumber());
+        ArrayList<Byte> numbList = Help.list(getNumber());
+        int othSize = othList.size();
+        int numSize = numbList.size();
+        int k = 0;
+
+        if (numSize == othSize)
+            for (int i = numSize - 1; i >= 0; i--) {
+                if (numbList.get(i) > othList.get(i)) {k = 1; break;}
+                if (numbList.get(i) < othList.get(i)) {k = -1; break;}
+            }
+        else k = numSize > othSize? 1 : -1;
+        return k;
+    }
+
     static class Help {
-        static ArrayList<Integer> addZero(int min, int max, ArrayList<Integer> list){
+        static ArrayList<Byte> addZero(int min, int max, ArrayList<Byte> list){
             for (int i = min; i < max; i++ )
-                list.add(i, 0);
+                list.add(i, (byte)0);
             return list;
         }
 
-        static String toString(ArrayList<Integer> res){
-            String str;
+        static String toString(ArrayList<Byte> res){
             int maximum = res.size();
-            if (res.get(maximum - 1) == 0 && maximum - 1 != 0) res.remove(maximum - 1);  //
-            str = new StringBuffer(res.toString().replaceAll("[,\\[\\] ]", "")).reverse().toString();
-            return str;
+            if (res.get(maximum - 1) == 0 && maximum - 1 != 0) res.remove(maximum - 1);
+            String str = res.stream().map(Object::toString).collect(Collectors.joining(""));
+            return new StringBuffer(str).reverse().toString();
         }
 
-        static ArrayList<Integer> union(ArrayList<Integer> a, ArrayList<Integer> b){
+        static ArrayList<Byte> union(ArrayList<Byte> a, ArrayList<Byte> b){
             for (int i = 0; i < b.size(); i++){
                 a.add(a.size() + i,b.get(i));
             }
             return a;
         }
 
-        static ArrayList<Integer> subList(ArrayList<Integer> arr, int low, int up){
-            ArrayList<Integer> newArr = new ArrayList<>();
+        static ArrayList<Byte> subList(ArrayList<Byte> arr, int low, int up){
+            ArrayList<Byte> newArr = new ArrayList<>();
             for (int i = low; i <= up; i++)
                 newArr.add(i - low, arr.get(i));
             return newArr;
         }
-        private static ArrayList<Integer> list(String number){
-            ArrayList<Integer> result = new ArrayList<>();
+        private static ArrayList<Byte> list(String number){
+            ArrayList<Byte> result = new ArrayList<>();
 
             for (int i = 0; i < number.length(); i++){
-                result.add(i, number.charAt(number.length() - 1 - i) - '0');
+                result.add(i, (byte)(number.charAt(number.length() - 1 - i) - '0'));
             }
             return result;
         }
