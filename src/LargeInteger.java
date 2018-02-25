@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LargeInteger implements Comparable<LargeInteger> {
@@ -36,25 +37,29 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     public LargeInteger sub(LargeInteger otherNum){ //subtraction
-        ArrayList<Byte> minList = compareTo(otherNum) <= 0 ? Help.list(getNumber()) : Help.list(otherNum.getNumber());
-        ArrayList<Byte> maxList = compareTo(otherNum) <= 0 ? Help.list(otherNum.getNumber()) : Help.list(getNumber());
-        int min = minList.size();
-        int max = maxList.size();
+        ArrayList<Byte> othList = Help.list(otherNum.getNumber());
+        ArrayList<Byte> numList = Help.list(getNumber());
+        int min = othList.size();
+        int max = numList.size();
         ArrayList<Byte> result = new ArrayList<>(max + 1);
-        String sign = compareTo(otherNum) >= 0? "" : "-";  //убрать вычитание
+        String sign = "";
 
+        if(compareTo(otherNum) < 0) throw new ArithmeticException("В ответе получится отрицательное число");
         for (int i = 0; i < min; i++){
-            int difference = maxList.get(i) - minList.get(i);
+            int difference = numList.get(i) - othList.get(i);
             if (difference < 0) {
-                result.add(i, (byte)(maxList.get(i) - minList.get(i) + 10));
-                maxList.set(i + 1, (byte)(maxList.get(i + 1) - 1));
+                result.add(i, (byte)(numList.get(i) - othList.get(i) + 10));
+                numList.set(i + 1, (byte)(numList.get(i + 1) - 1));
             }
-            else result.add(i, (byte)(maxList.get(i) - minList.get(i)));
+            else result.add(i, (byte)(numList.get(i) - othList.get(i)));
         }
         if (max > min)
             for (int i = min; i < max; i++ )
-                result.add(i, maxList.get(i));
-        return new LargeInteger(sign + Help.toString(result));
+                result.add(i, numList.get(i));
+        String str = Help.toString(result);
+        if (Pattern.matches("00*", str))
+            str = str.replaceFirst("0*", "0");
+        return new LargeInteger(sign + str);
     }
 
     public LargeInteger multi(LargeInteger otherNum){  //multiplier
@@ -86,20 +91,25 @@ public class LargeInteger implements Comparable<LargeInteger> {
         LargeInteger mediate ;
         int numSize = getNumber().length();
         int key = 0;
+        boolean start = false;
 
         if (compareTo(otherNum) < 0) return new LargeInteger("0");
         for (int i = numSize - 1; i >= 0; i--){
             mediate = new LargeInteger(Help.toString(Help.subList(dividend, i,numSize - 1)));
-            while (mediate.compareTo(otherNum) >= 0){
-                mediate = mediate.sub(otherNum);
-                key++;
+            if (mediate.compareTo(otherNum) >= 0) {
+                while (mediate.compareTo(otherNum) >= 0) {
+                    mediate = mediate.sub(otherNum);
+                    key++;
+                }
+                result.append(key);
+                start = true;
             }
-            if (key != 0) result.append(key);
-            key = 0;
-            if (i != 0)
+            else if (start)result.append(key);
+            if (i != 0 && key > 0)
                 if (!Objects.equals(mediate.getNumber(), "0"))
                     dividend = Help.union(Help.subList(dividend, 0, i - 1), Help.list(mediate.getNumber()));
                 else dividend = Help.subList(dividend, 0, i - 1);
+            key = 0;
             numSize = dividend.size();
         }
         return new LargeInteger(result.toString());
@@ -158,8 +168,10 @@ public class LargeInteger implements Comparable<LargeInteger> {
         }
 
         static ArrayList<Byte> union(ArrayList<Byte> a, ArrayList<Byte> b){
-            for (int i = 0; i < b.size(); i++){
-                a.add(a.size() + i,b.get(i));
+            int sizeA = a.size();
+            int sizeB = b.size();
+            for (int i = 0; i < sizeB; i++){
+                a.add(sizeA + i,b.get(i));
             }
             return a;
         }
