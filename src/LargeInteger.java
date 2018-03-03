@@ -8,11 +8,16 @@ public class LargeInteger implements Comparable<LargeInteger> {
     private String number;
 
     public LargeInteger(String num){
-        this.number = num;
+        if (Pattern.matches("\\d+", num))
+            this.number = num;
+        else throw new ArithmeticException("Вы ввели не число");
     }
 
     public LargeInteger(int num){
-        this.number = Integer.toString(num);
+        String numS = Integer.toString(num);
+        if (Pattern.matches("\\d+", numS))
+            this.number = numS;
+        else throw new ArithmeticException("Вы ввели не число");
     }
 
     public String getNumber(){
@@ -25,7 +30,8 @@ public class LargeInteger implements Comparable<LargeInteger> {
         int min = Math.min(numbList.size(), othList.size());
         int max = Math.max(numbList.size(), othList.size());
         ArrayList<Byte> result = Help.addZero(0, max + 1, new ArrayList<>());   //нужно заранее заполнить все нулями!!!!!!!!!
-        if (othList.size() < numbList.size()) othList = Help.addZero(min, max, othList);
+        if (othList.size() < numbList.size())
+            othList = Help.addZero(min, max, othList);
         else numbList = Help.addZero(min, max, numbList);
 
         for (int i = 0; i < max; i++){
@@ -59,6 +65,8 @@ public class LargeInteger implements Comparable<LargeInteger> {
         String str = Help.toString(result);
         if (Pattern.matches("00*", str))
             str = str.replaceFirst("0*", "0");
+        if (Pattern.matches("0*[^0]+", str))
+            str = str.replaceFirst("0*", "");
         return new LargeInteger(sign + str);
     }
 
@@ -86,14 +94,25 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     public LargeInteger div(LargeInteger otherNum){  //division
+        if (compareTo(otherNum) < 0)
+            return new LargeInteger("0");
+        return dAm(otherNum, true);
+    }
+
+    public LargeInteger mod(LargeInteger otherNum){  //modulo
+        if (compareTo(otherNum) < 0)
+            return new LargeInteger(getNumber());
+        return dAm(otherNum, false);
+    }
+
+    private LargeInteger dAm(LargeInteger otherNum, boolean res){
         ArrayList<Byte> dividend = Help.list(getNumber());
         StringBuilder result = new StringBuilder();
-        LargeInteger mediate ;
+        LargeInteger mediate = new LargeInteger("0");
         int numSize = getNumber().length();
         int key = 0;
         boolean start = false;
 
-        if (compareTo(otherNum) < 0) return new LargeInteger("0");
         for (int i = numSize - 1; i >= 0; i--){
             mediate = new LargeInteger(Help.toString(Help.subList(dividend, i,numSize - 1)));
             if (mediate.compareTo(otherNum) >= 0) {
@@ -104,20 +123,19 @@ public class LargeInteger implements Comparable<LargeInteger> {
                 result.append(key);
                 start = true;
             }
-            else if (start)result.append(key);
-            if (i != 0 && key > 0)
+            else if (start)
+                result.append(key);
+            if (i != 0 && key > 0) {
                 if (!Objects.equals(mediate.getNumber(), "0"))
                     dividend = Help.union(Help.subList(dividend, 0, i - 1), Help.list(mediate.getNumber()));
                 else dividend = Help.subList(dividend, 0, i - 1);
+            }
             key = 0;
             numSize = dividend.size();
         }
+        if (res)
         return new LargeInteger(result.toString());
-    }
-
-    public LargeInteger mod(LargeInteger otherNum){  //modulo
-        if (compareTo(otherNum) < 0) return new LargeInteger(getNumber());
-        return sub(otherNum.multi(div(otherNum)));
+        else return mediate;
     }
 
     @Override
@@ -162,7 +180,8 @@ public class LargeInteger implements Comparable<LargeInteger> {
 
         static String toString(ArrayList<Byte> res){
             int maximum = res.size();
-            if (res.get(maximum - 1) == 0 && maximum - 1 != 0) res.remove(maximum - 1);
+            if (res.get(maximum - 1) == 0 && maximum - 1 != 0)
+                res.remove(maximum - 1);
             String str = res.stream().map(Object::toString).collect(Collectors.joining(""));
             return new StringBuffer(str).reverse().toString();
         }
@@ -192,7 +211,3 @@ public class LargeInteger implements Comparable<LargeInteger> {
         }
     }
 }
-
-
-
-//for (LargeInteger dek = new LargeInteger("0"); dek.more(new LargeInteger(getNumber())); dek.add(new LargeInteger("1")))  подумать над использованием этой прекрасной штуки...
