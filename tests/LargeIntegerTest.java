@@ -74,7 +74,7 @@ class LargeIntegerTest {
     @Test
     void mod(){
         assertEquals(new LargeInteger("2"), new LargeInteger("2").mod(new LargeInteger("6")));
-//        assertEquals(new LargeInteger("0"), new LargeInteger("6").mod(new LargeInteger("2")));
+        assertEquals(new LargeInteger("0"), new LargeInteger("6").mod(new LargeInteger("2")));
         assertEquals(new LargeInteger("1"), new LargeInteger("1").mod(new LargeInteger("17")));
         assertEquals(new LargeInteger("2"), new LargeInteger("17").mod(new LargeInteger("3")));
         assertEquals(new LargeInteger("6"), new LargeInteger("96").mod(new LargeInteger("15")));

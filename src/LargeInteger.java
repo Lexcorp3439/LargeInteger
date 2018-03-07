@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -15,7 +16,7 @@ public class LargeInteger implements Comparable<LargeInteger> {
 
     public LargeInteger(int num){
         String numS = Integer.toString(num);
-        if (Pattern.matches("\\d+", numS))
+        if (num >= 0)
             this.number = numS;
         else throw new ArithmeticException("Вы ввели не число");
     }
@@ -25,11 +26,11 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     public LargeInteger add(LargeInteger otherNum){  //addition
-        ArrayList<Byte> othList = Help.list(otherNum.getNumber());
-        ArrayList<Byte> numbList = Help.list(getNumber());
+        List<Byte> othList = Help.list(otherNum.getNumber());
+        List<Byte> numbList = Help.list(getNumber());
         int min = Math.min(numbList.size(), othList.size());
         int max = Math.max(numbList.size(), othList.size());
-        ArrayList<Byte> result = Help.addZero(0, max + 1, new ArrayList<>());   //нужно заранее заполнить все нулями!!!!!!!!!
+        List<Byte> result = Help.addZero(0, max + 1, new ArrayList<>());   //нужно заранее заполнить все нулями!!!!!!!!!
         if (othList.size() < numbList.size())
             othList = Help.addZero(min, max, othList);
         else numbList = Help.addZero(min, max, numbList);
@@ -43,11 +44,11 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     public LargeInteger sub(LargeInteger otherNum){ //subtraction
-        ArrayList<Byte> othList = Help.list(otherNum.getNumber());
-        ArrayList<Byte> numList = Help.list(getNumber());
+        List<Byte> othList = Help.list(otherNum.getNumber());
+        List<Byte> numList = Help.list(getNumber());
         int min = othList.size();
         int max = numList.size();
-        ArrayList<Byte> result = new ArrayList<>(max + 1);
+        List<Byte> result = new ArrayList<>(max + 1);
         String sign = "";
 
         if(compareTo(otherNum) < 0) throw new ArithmeticException("В ответе получится отрицательное число");
@@ -71,10 +72,10 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     public LargeInteger multi(LargeInteger otherNum){  //multiplier
-        ArrayList<Byte> minList = compareTo(otherNum) <= 0 ? Help.list(getNumber()) : Help.list(otherNum.getNumber());
-        ArrayList<Byte> maxList = compareTo(otherNum) <= 0 ? Help.list(otherNum.getNumber()) : Help.list(getNumber());
+        List<Byte> minList = compareTo(otherNum) <= 0 ? Help.list(getNumber()) : Help.list(otherNum.getNumber());
+        List<Byte> maxList = compareTo(otherNum) <= 0 ? Help.list(otherNum.getNumber()) : Help.list(getNumber());
         LargeInteger result = new LargeInteger("0");
-        ArrayList<Byte> resList;
+        List<Byte> resList;
         int min = minList.size();
         int tens = 0;
 
@@ -106,7 +107,7 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     private LargeInteger dAm(LargeInteger otherNum, boolean res){
-        ArrayList<Byte> dividend = Help.list(getNumber());
+        List<Byte> dividend = Help.list(getNumber());
         StringBuilder result = new StringBuilder();
         LargeInteger mediate = new LargeInteger("0");
         int numSize = getNumber().length();
@@ -114,7 +115,7 @@ public class LargeInteger implements Comparable<LargeInteger> {
         boolean start = false;
 
         for (int i = numSize - 1; i >= 0; i--){
-            mediate = new LargeInteger(Help.toString(Help.subList(dividend, i,numSize - 1)));
+            mediate = new LargeInteger(Help.toString(dividend.subList(i ,numSize)));
             if (mediate.compareTo(otherNum) >= 0) {
                 while (mediate.compareTo(otherNum) >= 0) {
                     mediate = mediate.sub(otherNum);
@@ -127,8 +128,8 @@ public class LargeInteger implements Comparable<LargeInteger> {
                 result.append(key);
             if (i != 0 && key > 0) {
                 if (!Objects.equals(mediate.getNumber(), "0"))
-                    dividend = Help.union(Help.subList(dividend, 0, i - 1), Help.list(mediate.getNumber()));
-                else dividend = Help.subList(dividend, 0, i - 1);
+                    dividend = Help.union(dividend.subList(0, i), Help.list(mediate.getNumber()));
+                else dividend = dividend.subList(0, i);
             }
             key = 0;
             numSize = dividend.size();
@@ -156,8 +157,8 @@ public class LargeInteger implements Comparable<LargeInteger> {
 
     @Override
     public int compareTo(LargeInteger otherNum) {
-        ArrayList<Byte> othList = Help.list(otherNum.getNumber());
-        ArrayList<Byte> numbList = Help.list(getNumber());
+        List<Byte> othList = Help.list(otherNum.getNumber());
+        List<Byte> numbList = Help.list(getNumber());
         int othSize = othList.size();
         int numSize = numbList.size();
         int k = 0;
@@ -172,13 +173,13 @@ public class LargeInteger implements Comparable<LargeInteger> {
     }
 
     static class Help {
-        static ArrayList<Byte> addZero(int min, int max, ArrayList<Byte> list){
+        static List<Byte> addZero(int min, int max, List<Byte> list){
             for (int i = min; i < max; i++ )
                 list.add(i, (byte)0);
             return list;
         }
 
-        static String toString(ArrayList<Byte> res){
+        static String toString(List<Byte> res){
             int maximum = res.size();
             if (res.get(maximum - 1) == 0 && maximum - 1 != 0)
                 res.remove(maximum - 1);
@@ -186,7 +187,7 @@ public class LargeInteger implements Comparable<LargeInteger> {
             return new StringBuffer(str).reverse().toString();
         }
 
-        static ArrayList<Byte> union(ArrayList<Byte> a, ArrayList<Byte> b){
+        static List<Byte> union(List<Byte> a, List<Byte> b){
             int sizeA = a.size();
             int sizeB = b.size();
             for (int i = 0; i < sizeB; i++){
@@ -195,14 +196,8 @@ public class LargeInteger implements Comparable<LargeInteger> {
             return a;
         }
 
-        static ArrayList<Byte> subList(ArrayList<Byte> arr, int low, int up){
-            ArrayList<Byte> newArr = new ArrayList<>();
-            for (int i = low; i <= up; i++)
-                newArr.add(i - low, arr.get(i));
-            return newArr;
-        }
-        private static ArrayList<Byte> list(String number){
-            ArrayList<Byte> result = new ArrayList<>();
+        private static List<Byte> list(String number){
+            List<Byte> result = new ArrayList<>();
 
             for (int i = 0; i < number.length(); i++){
                 result.add(i, (byte)(number.charAt(number.length() - 1 - i) - '0'));
